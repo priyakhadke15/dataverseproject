@@ -1,0 +1,4 @@
+*.pyc
+server.log
+settings.json
+launch.json
