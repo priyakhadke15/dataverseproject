@@ -1,4 +1,5 @@
-from flask import Flask,request
+from flask import Flask,request,jsonify, make_response
+from werkzeug.utils import secure_filename
 import logging,os
 
 app = Flask(__name__)
@@ -14,9 +15,21 @@ def index():
 
 @app.route("/upload", methods = ['POST'])
 def upload():
-    if request.method == 'POST':
-        _createFolder()
-    return "Hello World!"
+    if request.method == 'POST' and request.files['file']:
+        try:
+            _createFolder()
+            uploadedFile = request.files['file']
+            app.logger.info(uploadedFile.stream._max_size)
+            uploadedFile.save(secure_filename(uploadedFile.filename))
+            return make_response(jsonify(
+                {
+                    "msg":"file uploaded successfully"
+                }
+                ),200
+                )
+        except:
+            return make_response(jsonify({"msg":"File not uploaded"}),500)
+   
 
 def _createFolder():
     _UPLOAD_FOLDER = '{}/uploads/'.format(PROJECT_HOME)
