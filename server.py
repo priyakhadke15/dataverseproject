@@ -8,6 +8,8 @@ app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.INFO)
 
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF"]
+app.config["MAX_IMAGE_FILESIZE"] = 0.5 * 1024 * 1024
 
 @app.route("/")
 def index():
@@ -17,8 +19,19 @@ def index():
 def upload():
     if request.method == 'POST' and request.files['file']:
         try:
-            _createFolder()
             uploadedFile = request.files['file']
+            if not "." in uploadedFile.filename:
+                return make_response(jsonify({"msg":"invalid file name"}),400)
+
+            ext = uploadedFile.filename.rsplit(".", 1)[1]
+            if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+                 return make_response(jsonify({"msg":"invalid file extension"}),400)
+           
+            # file_size = os.stat('/Users/abhijeetlimaye/Desktop/test.txt').st_size
+            # if int(file_size) > app.config["MAX_IMAGE_FILESIZE"]:
+            #     return False
+
+            _createFolder()
             app.logger.info(uploadedFile.stream._max_size)
             uploadedFile.save(secure_filename(uploadedFile.filename))
             return make_response(jsonify(
