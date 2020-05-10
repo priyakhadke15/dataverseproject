@@ -1,6 +1,7 @@
 from flask import Flask,request,jsonify, make_response
 from werkzeug.utils import secure_filename
 import logging,os
+import fileserver_client
 
 app = Flask(__name__)
 file_handler = logging.FileHandler('server.log')
@@ -28,13 +29,14 @@ def upload():
             if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
                  return make_response(jsonify({"msg":"invalid file extension"}),400)
            
-            # file_size = os.stat('/Users/abhijeetlimaye/Desktop/test.txt').st_size
+            # file_size = len(uploadedFile.read())
             # if int(file_size) > app.config["MAX_IMAGE_FILESIZE"]:
             #     return False
 
             _createFolder()
-            app.logger.info(uploadedFile.stream._max_size)
-            uploadedFile.save(os.path.join(app.config['UPLOAD_FOLDER'], uploadedFile.filename))
+            app.logger.info("Starting upload")
+            fileserver_client.Client().upload(uploadedFile)
+            uploadedFile.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(uploadedFile.filename)))
             return make_response(jsonify(
                 {
                     "msg":"file uploaded successfully"
