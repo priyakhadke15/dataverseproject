@@ -44,7 +44,7 @@ def upload():
                 app.logger.info("upload failed")
                 return make_response(jsonify({"msg":"File not uploaded"}),500)
             uploadtime = end - start
-            app.logger.info("Upload time in secs %s",str(uploadtime))
+            app.logger.info("Upload successfully in secs %s",str(uploadtime))
             
             # uploadedFile.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(uploadedFile.filename)))
             return make_response(jsonify(
@@ -58,6 +58,38 @@ def upload():
         except Exception,e:
             return make_response(jsonify({"msg":str(e)}),500)
    
+@app.route("/download", methods = ['GET'])
+def download():
+    app.logger.info("in download")
+    try:
+        filename = request.args.get('filename')
+        if not "." in filename:
+            app.logger.info("download %s",filename)
+            return make_response(jsonify({"msg":"invalid file name"}),400)
+
+        ext = filename.rsplit(".", 1)[1]
+        if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+            return make_response(jsonify({"msg":"invalid file extension"}),400)
+        app.logger.info("Starting download")
+        start = time.time()
+        success = fileserver_client.Client().download(filename)
+        end = time.time()
+
+        if not success:
+            app.logger.info("download failed")
+            return make_response(jsonify({"msg":"File not downloaded"}),500)
+        downloadtime = end - start
+        app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
+        return make_response(jsonify(
+            {
+                "msg":"file downloaded successfully",
+                "downloaded": success,
+                "downloadtime":downloadtime
+            }
+            ),200
+            )
+    except Exception,e:
+        return make_response(jsonify({"msg":str(e)}),500)
 
 def _createFolder():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
