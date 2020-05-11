@@ -18,12 +18,23 @@ class FileServiceStub(object):
                 request_serializer=file__server__pb2.Chunk.SerializeToString,
                 response_deserializer=file__server__pb2.UploadStatus.FromString,
                 )
+        self.Download = channel.unary_stream(
+                '/FileService/Download',
+                request_serializer=file__server__pb2.Name.SerializeToString,
+                response_deserializer=file__server__pb2.Chunk.FromString,
+                )
 
 
 class FileServiceServicer(object):
     """Missing associated documentation comment in .proto file"""
 
     def Upload(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Download(self, request, context):
         """Missing associated documentation comment in .proto file"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -36,6 +47,11 @@ def add_FileServiceServicer_to_server(servicer, server):
                     servicer.Upload,
                     request_deserializer=file__server__pb2.Chunk.FromString,
                     response_serializer=file__server__pb2.UploadStatus.SerializeToString,
+            ),
+            'Download': grpc.unary_stream_rpc_method_handler(
+                    servicer.Download,
+                    request_deserializer=file__server__pb2.Name.FromString,
+                    response_serializer=file__server__pb2.Chunk.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -60,5 +76,21 @@ class FileService(object):
         return grpc.experimental.stream_unary(request_iterator, target, '/FileService/Upload',
             file__server__pb2.Chunk.SerializeToString,
             file__server__pb2.UploadStatus.FromString,
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Download(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/FileService/Download',
+            file__server__pb2.Name.SerializeToString,
+            file__server__pb2.Chunk.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)

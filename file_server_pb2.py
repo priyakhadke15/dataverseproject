@@ -18,10 +18,41 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n\x11\x66ile_server.proto\"\x16\n\x05\x43hunk\x12\r\n\x05\x63hunk\x18\x01 \x01(\x0c\"\x1f\n\x0cUploadStatus\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x32\n\x0b\x46ileService\x12#\n\x06Upload\x12\x06.Chunk\x1a\r.UploadStatus\"\x00(\x01\x62\x06proto3'
+  serialized_pb=b'\n\x11\x66ile_server.proto\"\x14\n\x04Name\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x16\n\x05\x43hunk\x12\r\n\x05\x63hunk\x18\x01 \x01(\x0c\"\x1f\n\x0cUploadStatus\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32Q\n\x0b\x46ileService\x12#\n\x06Upload\x12\x06.Chunk\x1a\r.UploadStatus\"\x00(\x01\x12\x1d\n\x08\x44ownload\x12\x05.Name\x1a\x06.Chunk\"\x00\x30\x01\x62\x06proto3'
 )
 
 
+
+
+_NAME = _descriptor.Descriptor(
+  name='Name',
+  full_name='Name',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='Name.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=21,
+  serialized_end=41,
+)
 
 
 _CHUNK = _descriptor.Descriptor(
@@ -50,8 +81,8 @@ _CHUNK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=21,
-  serialized_end=43,
+  serialized_start=43,
+  serialized_end=65,
 )
 
 
@@ -81,13 +112,21 @@ _UPLOADSTATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=45,
-  serialized_end=76,
+  serialized_start=67,
+  serialized_end=98,
 )
 
+DESCRIPTOR.message_types_by_name['Name'] = _NAME
 DESCRIPTOR.message_types_by_name['Chunk'] = _CHUNK
 DESCRIPTOR.message_types_by_name['UploadStatus'] = _UPLOADSTATUS
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+Name = _reflection.GeneratedProtocolMessageType('Name', (_message.Message,), {
+  'DESCRIPTOR' : _NAME,
+  '__module__' : 'file_server_pb2'
+  # @@protoc_insertion_point(class_scope:Name)
+  })
+_sym_db.RegisterMessage(Name)
 
 Chunk = _reflection.GeneratedProtocolMessageType('Chunk', (_message.Message,), {
   'DESCRIPTOR' : _CHUNK,
@@ -111,8 +150,8 @@ _FILESERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=78,
-  serialized_end=128,
+  serialized_start=100,
+  serialized_end=181,
   methods=[
   _descriptor.MethodDescriptor(
     name='Upload',
@@ -121,6 +160,15 @@ _FILESERVICE = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CHUNK,
     output_type=_UPLOADSTATUS,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Download',
+    full_name='FileService.Download',
+    index=1,
+    containing_service=None,
+    input_type=_NAME,
+    output_type=_CHUNK,
     serialized_options=None,
   ),
 ])

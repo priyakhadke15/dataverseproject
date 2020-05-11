@@ -2,6 +2,11 @@ syntax = "proto3";
 
 service FileService {
     rpc Upload(stream Chunk) returns (UploadStatus) {}
+    rpc Download(Name) returns (stream Chunk) {}
+}
+
+message Name {
+    string name = 1;
 }
 
 message Chunk {
