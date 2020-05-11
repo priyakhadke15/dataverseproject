@@ -4,7 +4,7 @@ import grpc
 import file_server_pb2
 import file_server_pb2_grpc
 import time
-import os
+import os,logging
 
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -15,7 +15,8 @@ CHUNK_SIZE = int(1024 * 1024 * 3.9) # 3.99MB
 # FileServiceServicer provides an implementation of the methods of the FileServer service.
 class FileServicer(file_server_pb2_grpc.FileServiceServicer):
     def __init__(self):
-        print('initializing GRPC server')
+        logging.basicConfig(level=logging.INFO)
+        logging.info('initializing GRPC server')
 
     def Upload(self, request, context):
         metadata = context.invocation_metadata()
@@ -32,7 +33,7 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             output.close()
             return file_server_pb2.UploadStatus(success=True)
         except Exception, e:
-            print('Failed to upload to ftp: '+ str(e))
+            logging.warning('Failed to upload to ftp: '+ str(e))
             return file_server_pb2.UploadStatus(success=False)
     
     def _byteStream(self, fileHandle):
@@ -46,12 +47,13 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
     def Download(self, request, context):
         try:
             filename = request.name
-            print(request.name)
-            print('Starting GRPC download')
+            logging.info(request.name)
+            logging.info('Starting GRPC download')
             fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
+            logging.info('completed GRPC download')
             return self._byteStream(fileHandle)
         except Exception,e:
-            print('Failed GRPC download : '+ str(e))
+            logging.warning('Failed GRPC download : '+ str(e))
             return None
         
 def serve():
