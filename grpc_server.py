@@ -18,17 +18,17 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
         logging.basicConfig(level=logging.INFO)
         logging.info('initializing GRPC server')
 
-    def Upload(self, request, context):
-        metadata = context.invocation_metadata()
-        filename = 'output'
-        for c in metadata:
-            if(c.key == 'filename'):
-                filename = c.value
-                break
+    def Upload(self, request, context):    
         try:
+            metadata = context.invocation_metadata()
+            filename = None
+            for c in metadata:
+                if(c.key == 'filename'):
+                    filename = c.value
+                    break
+            self._createFolder()
             with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as output:
                 for c in request:
-                    # print(c)
                     output.write(c.chunk)
             output.close()
             return file_server_pb2.UploadStatus(success=True)
@@ -53,9 +53,17 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             logging.info('completed GRPC download')
             return self._byteStream(fileHandle)
         except Exception,e:
-            logging.warning('Failed GRPC download : '+ str(e))
+            logging.debug('Failed GRPC download : '+ str(e))
             return None
-        
+
+    def _createFolder(self):
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+            logging.info("created uploads folder")
+        else:
+            logging.info("uploads folder exists")
+        logging.info(UPLOAD_FOLDER)    
+
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     file_server_pb2_grpc.add_FileServiceServicer_to_server(FileServicer(), server)

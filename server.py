@@ -1,4 +1,4 @@
-from flask import Flask,request,jsonify, make_response
+from flask import Flask,request,jsonify, make_response,send_file
 from werkzeug.utils import secure_filename
 import logging,os
 import fileserver_client
@@ -31,11 +31,10 @@ def upload():
             if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
                  return make_response(jsonify({"msg":"invalid file extension"}),400)
            
-            # file_size = len(uploadedFile.read())
+            file_size = len(uploadedFile.read())
             # if int(file_size) > app.config["MAX_IMAGE_FILESIZE"]:
             #     return False
 
-            _createFolder()
             app.logger.info("Starting upload")
             start = time.time()
             success = fileserver_client.Client().upload(uploadedFile)
@@ -51,7 +50,8 @@ def upload():
                 {
                     "msg":"file uploaded successfully",
                     "uploaded": success,
-                    "uploadtime":uploadtime
+                    "uploadtime":uploadtime,
+                    "filesize":file_size
                 }
                 ),200
                 )
@@ -80,24 +80,17 @@ def download():
             return make_response(jsonify({"msg":"File not downloaded"}),500)
         downloadtime = end - start
         app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
+        # return send_file('/Users/abhijeetlimaye/Desktop/test.txt', attachment_filename='python.txt')
         return make_response(jsonify(
             {
                 "msg":"file downloaded successfully",
-                "downloaded": success,
-                "downloadtime":downloadtime
+                "downloadtime":downloadtime,
+                "filesize":file_size,
             }
             ),200
             )
     except Exception,e:
         return make_response(jsonify({"msg":str(e)}),500)
-
-def _createFolder():
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-        app.logger.info("created uploads folder")
-    else:
-        app.logger.info("uploads folder exists")
-    app.logger.info(app.config['UPLOAD_FOLDER'])
 
 if __name__ == "__main__":
     app.run(debug=True)
