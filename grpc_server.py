@@ -4,7 +4,7 @@ import grpc
 import file_server_pb2
 import file_server_pb2_grpc
 import time
-import os,logging
+import os,logging,sys
 
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -67,7 +67,9 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     file_server_pb2_grpc.add_FileServiceServicer_to_server(FileServicer(), server)
-    server.add_insecure_port('[::]:2750')
+    logging.info('Starting GRPC server on port :%s',str(sys.argv[1]))
+    port=str(sys.argv[1])
+    server.add_insecure_port('[::]:'+port)
     server.start()
     server.wait_for_termination()
 

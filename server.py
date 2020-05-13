@@ -84,8 +84,7 @@ def download():
         return make_response(jsonify(
             {
                 "msg":"file downloaded successfully",
-                "downloadtime":downloadtime,
-                "filesize":file_size,
+                "downloadtime":downloadtime
             }
             ),200
             )

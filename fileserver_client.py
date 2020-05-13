@@ -3,6 +3,8 @@ import file_server_pb2
 import file_server_pb2_grpc
 import logging
 import os
+import commands
+import random
 
 CHUNK_SIZE = int(1024 * 1024 * 3.9) # 3.99MB
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
@@ -12,7 +14,10 @@ class Client:
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
         logging.info("initializing GRPC client")
-        channel = grpc.insecure_channel('localhost:2750')
+        # Move the host selection logic next 2 lines to Consistent Hash algorithm
+        ports = self._getAllNodes()
+        portNumber=random.choice(ports)
+        channel = grpc.insecure_channel('localhost:'+portNumber)
         self.stub = file_server_pb2_grpc.FileServiceStub(channel)
 
     def _byteStream(self,fileHandle):
@@ -42,3 +47,16 @@ class Client:
             return True
         logging.warning("GRPC client fail download")    
         return False
+    
+    # Gets the list of GRPC Servers ports running as
+    def _getAllNodes(self):
+        list_of_ps = os.popen("ps -eaf|grep grpc_server").read().split('\n')
+        output = [i for i in list_of_ps if "python" in i]
+        i=0
+        portList =[]
+        while i<len(output):
+            temp = output[i].split(' ')
+            portList.append(temp[len(temp)-1])
+            logging.info("GRPC servers on port %s",str(temp[len(temp)-1]))
+            i=i+1
+        return portList
