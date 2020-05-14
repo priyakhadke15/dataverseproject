@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import logging,os
 import fileserver_client
 import time
+import hashlib
 
 app = Flask(__name__)
 file_handler = logging.FileHandler('server.log')
@@ -32,6 +33,9 @@ def upload():
                  return make_response(jsonify({"msg":"invalid file extension"}),400)
            
             file_size = len(uploadedFile.read())
+            uploadedFile.seek(0)
+            md5 = hashlib.md5(uploadedFile.read()).hexdigest()
+            uploadedFile.seek(0)
             # if int(file_size) > app.config["MAX_IMAGE_FILESIZE"]:
             #     return False
 
@@ -50,8 +54,9 @@ def upload():
                 {
                     "msg":"file uploaded successfully",
                     "uploaded": success,
-                    "uploadtime":uploadtime,
-                    "filesize":file_size
+                    "uploadtime": uploadtime,
+                    "filesize": file_size,
+                    "md5": md5
                 }
                 ),200
                 )
@@ -92,4 +97,4 @@ def download():
         return make_response(jsonify({"msg":str(e)}),500)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0',debug=True)
