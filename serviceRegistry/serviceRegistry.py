@@ -31,7 +31,17 @@ def register():
 # API to send the GRPC server heartbeat to service registery
 @app.route("/heartbeat", methods=['PUT'])
 def heartbeat():
-    return "register"
+    try:
+        ipaddress = request.values.get('ipaddress')
+        portno = request.values.get('port')
+        key = ipaddress+":"+portno
+        if key not in dict.keys(serverMap): 
+            logging.info("not registered service")
+            return make_response(jsonify({"msg":"GRPC server not registered"}),400)
+        serverMap[key] = round(time.time())
+        return serverMap
+    except Exception as e:
+        return make_response(jsonify({"msg":str(e)}),500)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001,debug=True)
