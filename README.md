@@ -28,3 +28,4 @@ pip install -r requirements.txt
 ## Reference
 https://ops.tips/blog/sending-files-via-grpc/
 https://grpc.io/docs/tutorials/basic/python/
+https://www.nginx.com/blog/service-discovery-in-a-microservices-architecture/

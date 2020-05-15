@@ -2,4 +2,5 @@
 server.log
 settings.json
 launch.json
-*.avi
+serviceRegistry.log
+etcd.py
