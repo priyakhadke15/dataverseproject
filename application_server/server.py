@@ -1,9 +1,12 @@
 from flask import Flask,request,jsonify, make_response,send_file
 from werkzeug.utils import secure_filename
 import logging,os
-import fileserver_client
+import sys
 import time
 import hashlib
+
+sys.path.append('../')
+import fileserver_client
 
 app = Flask(__name__)
 file_handler = logging.FileHandler('server.log')
@@ -75,7 +78,7 @@ def download():
         ext = filename.rsplit(".", 1)[1]
         if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return make_response(jsonify({"msg":"invalid file extension"}),400)
-        app.logger.info("Starting download")
+        app.logger.info("\n\nStarting download")
         start = time.time()
         success = fileserver_client.Client().download(filename)
         end = time.time()

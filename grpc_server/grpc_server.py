@@ -1,12 +1,13 @@
 from concurrent import futures
-import threading
+# import threading
 import grpc
-import file_server_pb2
-import file_server_pb2_grpc
 import time
 import os,logging,sys
 import requests
 
+sys.path.append('../')
+import file_server_pb2
+import file_server_pb2_grpc
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
@@ -25,7 +26,6 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
         try:
             registerAPI = serviceRegistry_url+"/register"
             x = requests.post(registerAPI, data = thisnodeAdd)
-
         except Exception as e:
             logging.warning('Failed to register: '+ str(e))
 
@@ -48,6 +48,7 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             return file_server_pb2.UploadStatus(success=False)
     
     def _byteStream(self, fileHandle):
+        logging.info('\nin bytestream\n')
         while True:
             chunk = fileHandle.read(CHUNK_SIZE)
             if not chunk:
@@ -56,15 +57,20 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             yield file_server_pb2.Chunk(chunk=chunk)
 
     def Download(self, request, context):
+        print('in download')
+        logging.info('in download')
         try:
             filename = request.name
             logging.info(request.name)
+            print(filename)
             logging.info('Starting GRPC download')
             fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
             logging.info('completed GRPC download')
             return self._byteStream(fileHandle)
         except Exception,e:
-            logging.debug('Failed GRPC download : '+ str(e))
+            logging.info('Failed GRPC download : '+ str(e))
+            logging.warning('Failed GRPC download : '+ str(e))
+            print('Failed GRPC download : '+ str(e))
             return None
 
     def _createFolder(self):
@@ -86,7 +92,7 @@ def serve():
     starttime=time.time()
     heartbeatAPI = serviceRegistry_url+"/heartbeat"
     while True:
-        logging.info('heartbeat')
+        logging.info('sending heartbeat at %s', heartbeatAPI)
         requests.put(heartbeatAPI, data = thisnodeAdd)
         time.sleep(10)
     server.wait_for_termination()

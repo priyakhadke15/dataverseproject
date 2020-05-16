@@ -16,14 +16,14 @@ pip install -r requirements.txt
 ### Generate GRPC server files
 ```
 1. cd project home dir
-2. python -m grpc_tools.protoc -I ./protos --python_out=. --grpc_python_out=. ./protos/file_server.proto
+2. python -m grpc_tools.protoc -I ./protos --python_out=./runtime --grpc_python_out=./runtime ./protos/file_server.proto
 ```
 ### Run 
 ```
-1. python server.py
+1. python application_server/server.py
 2. In new terminals run multiple GRPC servers using IPaddress and port number in args 
-   python grpc_server.py 127.0.0.0 2750
-   python grpc_server.py 127.0.0.0 2751
+   python grpc_server/grpc_server.py 127.0.0.0 2750
+   python grpc_server/grpc_server.py 127.0.0.0 2751
 ```
 ## Reference
 https://ops.tips/blog/sending-files-via-grpc/

@@ -1,10 +1,13 @@
 import grpc
-import file_server_pb2
-import file_server_pb2_grpc
 import logging
 import os
 import commands
 import random
+import sys
+
+sys.path.append('../')
+import file_server_pb2
+import file_server_pb2_grpc
 
 CHUNK_SIZE = int(1024 * 1024 * 3.9) # 3.99MB
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
@@ -23,8 +26,15 @@ class Client:
                 break
             yield file_server_pb2.Chunk(chunk=chunk)
 
+    def _createFolder(self):
+        if not os.path.exists(DOWNLOAD_FOLDER):
+            os.makedirs(DOWNLOAD_FOLDER)
+            logging.info("created /downloads folder")
+        else:
+            logging.info("/downloads folder exists")
+        logging.info(DOWNLOAD_FOLDER)  
+    
     def upload(self, uploadedFile):
-        
         logging.info("within GRPC client upload")  
         try:
             stub=self._connect()
@@ -40,6 +50,8 @@ class Client:
         try:
             stub=self._connect()
             response = stub.Download(file_server_pb2.Name(name=filename))
+            print(response)
+            self._createFolder()
             fileHandle = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
             if fileHandle is not None:
                 for chunk in response:
@@ -50,7 +62,8 @@ class Client:
             logging.warning("GRPC client fail download")    
             return False
         except Exception as e:
-            logging.warning("%s",str(e))  
+            logging.warning("%s",str(e))
+            return False
     
     # Gets the list of GRPC Servers ports running as
     def _getAllNodes(self):
