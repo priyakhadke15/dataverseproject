@@ -34,10 +34,10 @@ class Client:
             logging.info("/downloads folder exists")
         logging.info(DOWNLOAD_FOLDER)  
     
-    def upload(self, uploadedFile):
+    def upload(self, uploadedFile, grpcServerIP):
         logging.info("within GRPC client upload")  
         try:
-            stub=self._connect()
+            stub=self._connect(grpcServerIP)
             chunks_generator = self._byteStream(uploadedFile)
             metadata = (('filename', uploadedFile.filename),)
             response = stub.Upload(chunks_generator, metadata=metadata)
@@ -45,12 +45,12 @@ class Client:
         except Exception as e:
             logging.warning("%s",str(e))
 
-    def download(self, filename):
+    def download(self, filename, grpcServerIP):
         logging.info("within GRPC client download")
         try:
-            stub=self._connect()
+            stub=self._connect(grpcServerIP)
             response = stub.Download(file_server_pb2.Name(name=filename))
-            print(response)
+            logging.info(response)
             self._createFolder()
             fileHandle = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
             if fileHandle is not None:
@@ -79,10 +79,11 @@ class Client:
         return portList
     
     # connect to given GRPC server
-    def _connect(self):
+    def _connect(self, grpcServerIP):
         # Move the host selection logic next 2 lines to Consistent Hash algorithm
-        ports = self._getAllNodes()
-        portNumber=random.choice(ports)
-        channel = grpc.insecure_channel('localhost:'+portNumber)
+        # ports = self._getAllNodes()
+        # portNumber=random.choice(ports)
+        logging.info("connecting to grpc server at %s", grpcServerIP)
+        channel = grpc.insecure_channel(grpcServerIP)
         stub = file_server_pb2_grpc.FileServiceStub(channel)
         return stub

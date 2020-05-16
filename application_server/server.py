@@ -4,6 +4,7 @@ import logging,os
 import sys
 import time
 import hashlib
+import requests
 
 sys.path.append('../')
 import fileserver_client
@@ -17,6 +18,7 @@ PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 app.config['UPLOAD_FOLDER'] = '{}/uploads/'.format(PROJECT_HOME)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
 app.config["MAX_IMAGE_FILESIZE"] = 0.5 * 1024 * 1024
+serviceRegistry_url = 'http://0.0.0.0:5001/getserver'
 
 @app.route("/")
 def index():
@@ -42,9 +44,11 @@ def upload():
             # if int(file_size) > app.config["MAX_IMAGE_FILESIZE"]:
             #     return False
 
-            app.logger.info("Starting upload")
+            grpcServerIP = __getServerAddress(md5)
+            app.logger.info("Starting upload at %s",grpcServerIP)
+
             start = time.time()
-            success = fileserver_client.Client().upload(uploadedFile)
+            success = fileserver_client.Client().upload(uploadedFile,grpcServerIP)
             end = time.time()
             if not success:
                 app.logger.info("upload failed")
@@ -78,9 +82,11 @@ def download():
         ext = filename.rsplit(".", 1)[1]
         if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return make_response(jsonify({"msg":"invalid file extension"}),400)
-        app.logger.info("\n\nStarting download")
+        
+        grpcServerIP = __getServerAddress(filename)
+        app.logger.info("Starting download from %s", grpcServerIP)
         start = time.time()
-        success = fileserver_client.Client().download(filename)
+        success = fileserver_client.Client().download(filename, grpcServerIP)
         end = time.time()
 
         if not success:
@@ -98,6 +104,16 @@ def download():
             )
     except Exception,e:
         return make_response(jsonify({"msg":str(e)}),500)
+
+def __getServerAddress(md5):
+    filemd5 = {'md5': md5}
+    try:
+        raw_response = requests.get(serviceRegistry_url, params = filemd5)
+        app.logger.info("%s",raw_response)
+        obj = raw_response.json()
+        return obj['msg']
+    except Exception as e:
+        app.logger.warning("%s",str(e))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',debug=True)

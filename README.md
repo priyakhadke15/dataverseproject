@@ -22,8 +22,8 @@ pip install -r requirements.txt
 ```
 1. python application_server/server.py
 2. In new terminals run multiple GRPC servers using IPaddress and port number in args 
-   python grpc_server/grpc_server.py 127.0.0.0 2750
-   python grpc_server/grpc_server.py 127.0.0.0 2751
+   python grpc_server/grpc_server.py 127.0.0.1 2750
+   python grpc_server/grpc_server.py 127.0.0.1 2751
 ```
 ## Reference
 https://ops.tips/blog/sending-files-via-grpc/
