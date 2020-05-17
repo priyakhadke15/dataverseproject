@@ -133,17 +133,7 @@ def download():
         app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
 
         # merge all chunks, delete individual chunk files after appending
-        mergedFile = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
-        for dict in chunks:
-            chunkHandle = open(os.path.join(DOWNLOAD_FOLDER, dict['name']), "rb")
-            while True:
-                chunk = chunkHandle.read(MAX_FILE_SIZE)
-                if not chunk:
-                    chunkHandle.close()
-                    os.remove(os.path.join(DOWNLOAD_FOLDER, dict['name']))
-                    break
-                mergedFile.write(chunk)
-        mergedFile.close()
+        __mergeChunkFiles(filename, chunks)
 
         # return send_file('/Users/abhijeetlimaye/Desktop/test.txt', attachment_filename='python.txt')
         return make_response(jsonify(
@@ -155,6 +145,19 @@ def download():
             )
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
+
+def __mergeChunkFiles(mergedFilename, chunks):
+    mergedFile = open(os.path.join(DOWNLOAD_FOLDER, mergedFilename), "wb")
+    for dict in chunks:
+        chunkHandle = open(os.path.join(DOWNLOAD_FOLDER, dict['name']), "rb")
+        while True:
+            chunk = chunkHandle.read(MAX_FILE_SIZE)
+            if not chunk:
+                chunkHandle.close()
+                os.remove(os.path.join(DOWNLOAD_FOLDER, dict['name']))
+                break
+            mergedFile.write(chunk)
+    mergedFile.close()
 
 def __downloadChunk(chunkName):
     fileHandle = open(os.path.join(DOWNLOAD_FOLDER, chunkName), "wb")
