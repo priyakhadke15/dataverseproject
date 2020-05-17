@@ -102,7 +102,7 @@ def download():
             }
             ),200
             )
-    except Exception,e:
+    except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
 
 def __getServerAddress(md5):
