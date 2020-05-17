@@ -15,20 +15,18 @@ class Client:
         logging.basicConfig(level=logging.INFO)
         logging.info("initializing GRPC client")
 
-    def _byteStream(self, fileHandle, readUntil):
+    def _byteStream(self, fileHandle):
         while True:
-            readFrom = fileHandle.tell()
-            read_chunk_size = min(abs(readUntil - readFrom), CHUNK_SIZE)
-            chunk = fileHandle.read(read_chunk_size)
+            chunk = fileHandle.read(CHUNK_SIZE)
             if not chunk:
                 break
             yield file_server_pb2.Chunk(chunk=chunk)
     
-    def upload(self, uploadedFile, grpcServerIP, readUntil, chunkName):
+    def upload(self, uploadedFile, grpcServerIP, chunkName):
         logging.info("within GRPC client upload")  
         try:
             stub=self._connect(grpcServerIP)
-            chunks_generator = self._byteStream(uploadedFile, readUntil)
+            chunks_generator = self._byteStream(uploadedFile)
             metadata = (('filename', chunkName),)
             response = stub.Upload(chunks_generator, metadata=metadata)
             return response.success

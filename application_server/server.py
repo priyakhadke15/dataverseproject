@@ -7,6 +7,7 @@ import hashlib
 import requests
 import threading
 import json
+from io import BytesIO
 
 sys.path.append('../')
 import fileserver_client
@@ -40,10 +41,10 @@ def upload():
             start = time.time()
             runningMD5 = hashlib.md5()
             chunks = []
+            threads = []
             chunkCtr = 1
             prevReadPtr = 0
             totalFileSize = 0;
-            success = False
             while True:
                 chunk = uploadedFile.read(MAX_FILE_SIZE)
                 if not chunk:
@@ -51,21 +52,19 @@ def upload():
                 chunkmd5 = hashlib.md5(chunk).hexdigest()
                 runningMD5.update(chunk);
 
+                threads.append(threading.Thread(target=__uploadChunk, args=(chunk, chunkmd5,),))
+                threads[-1].start()
+
                 newReadPtr = uploadedFile.tell()
-                uploadedFile.seek(prevReadPtr)
-                grpcServerIP = __getServerAddress(chunkmd5)
-                app.logger.info("Starting upload at %s",grpcServerIP)
-                success = fileserver_client.Client().upload(uploadedFile, grpcServerIP, newReadPtr, chunkmd5)
                 chunks.append({ "chunkNumber": chunkCtr, "name": chunkmd5, "size": newReadPtr - prevReadPtr })
-                totalFileSize = newReadPtr - prevReadPtr
+                totalFileSize += newReadPtr - prevReadPtr
                 chunkCtr += 1
-                prevReadPtr = uploadedFile.tell()
+                prevReadPtr = newReadPtr
+
+            for t in threads:
+                t.join()
 
             end = time.time()
-
-            if not success:
-                app.logger.info("upload failed")
-                return make_response(jsonify({"msg":"File not uploaded"}),500)
             uploadtime = end - start
             app.logger.info("Upload successfully in secs %s",str(uploadtime))
 
@@ -77,7 +76,7 @@ def upload():
             return make_response(jsonify(
                 {
                     "msg":"file uploaded successfully",
-                    "uploaded": success,
+                    "uploaded": True,
                     "uploadtime": uploadtime,
                     "filesize": totalFileSize,
                     "md5": runningMD5.hexdigest(),
@@ -129,7 +128,11 @@ def download():
         # ok to stop timer here since all chunks have been downloaded parallelly
         end = time.time()
 
-        # now merge all chunks, delete individual chunk files after appending
+        # all chunks are now downloaded, calculate time taken to download chunks
+        downloadtime = end - start
+        app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
+
+        # merge all chunks, delete individual chunk files after appending
         mergedFile = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
         for dict in chunks:
             chunkHandle = open(os.path.join(DOWNLOAD_FOLDER, dict['name']), "rb")
@@ -142,8 +145,6 @@ def download():
                 mergedFile.write(chunk)
         mergedFile.close()
 
-        downloadtime = end - start
-        app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
         # return send_file('/Users/abhijeetlimaye/Desktop/test.txt', attachment_filename='python.txt')
         return make_response(jsonify(
             {
@@ -157,10 +158,17 @@ def download():
 
 def __downloadChunk(chunkName):
     fileHandle = open(os.path.join(DOWNLOAD_FOLDER, chunkName), "wb")
-    grpcServerIP = __getServerAddress(chunkName)
+    grpcServerIP = __getStreamingServerAddress(chunkName)
     app.logger.info("Starting download for %s from %s", chunkName, grpcServerIP)
     fileserver_client.Client().download(chunkName, grpcServerIP, fileHandle)
+    app.logger.info("Downloaded chunk %s successfully from %s", chunkName, grpcServerIP)
     fileHandle.close()
+
+def __uploadChunk(chunk, chunkName):
+    grpcServerIP = __getStreamingServerAddress(chunkName)
+    app.logger.info("Starting upload for %s at %s", chunkName, grpcServerIP)
+    fileserver_client.Client().upload(BytesIO(chunk), grpcServerIP, chunkName)
+    app.logger.info("Uploaded chunk %s successfully at %s", chunkName, grpcServerIP)
 
 def _saveFilemapInRegistry(filename, fileMap):
     data = { "filename": filename, "chunks": json.dumps(fileMap)}
@@ -180,7 +188,7 @@ def _getFilemapFromRegistry(filename):
     except Exception as e:
         app.logger.warning("%s",str(e))
 
-def __getServerAddress(md5):
+def __getStreamingServerAddress(md5):
     filemd5 = {'md5': md5}
     try:
         raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserver", params = filemd5)
