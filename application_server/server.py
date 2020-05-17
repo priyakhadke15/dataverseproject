@@ -9,7 +9,7 @@ import threading
 import json
 from io import BytesIO
 
-sys.path.append('../')
+sys.path.append('../runtime')
 import fileserver_client
 
 app = Flask(__name__)
