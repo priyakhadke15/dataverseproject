@@ -4,7 +4,7 @@ import os
 import random
 import sys
 
-sys.path.append('../')
+sys.path.append('../runtime')
 import file_server_pb2
 import file_server_pb2_grpc
 
