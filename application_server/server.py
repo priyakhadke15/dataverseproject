@@ -67,7 +67,7 @@ def upload():
                 }
                 ),200
                 )
-        except Exception,e:
+        except Exception as e:
             return make_response(jsonify({"msg":str(e)}),500)
    
 @app.route("/download", methods = ['GET'])
