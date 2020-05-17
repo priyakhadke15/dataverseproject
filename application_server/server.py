@@ -10,14 +10,11 @@ sys.path.append('../')
 import fileserver_client
 
 app = Flask(__name__)
-file_handler = logging.FileHandler('server.log')
-app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.INFO)
 
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
-app.config['UPLOAD_FOLDER'] = '{}/uploads/'.format(PROJECT_HOME)
+DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
-app.config["MAX_IMAGE_FILESIZE"] = 0.5 * 1024 * 1024
 SERVICE_REGISTRY_ENDPOINT = 'http://0.0.0.0:5001/getserver'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
 
@@ -99,10 +96,29 @@ def download():
         if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return make_response(jsonify({"msg":"invalid file extension"}),400)
         
-        grpcServerIP = __getServerAddress(filename)
-        app.logger.info("Starting download from %s", grpcServerIP)
+        # TODO: this list should come from service registry
+        chunks = [
+            {
+                "chunkNumber": 1,
+                "name": "348f95c89947ac4be76faabdcf660e65",
+                "size": 31457280
+            },
+            {
+                "chunkNumber": 2,
+                "name": "907e39b684bda5bfd0308f281628664c",
+                "size": 20257792
+            }
+        ]
+
         start = time.time()
-        success = fileserver_client.Client().download(filename, grpcServerIP)
+        _createDownloadFolder()
+        fileHandle = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
+        success = False
+        for dict in chunks:
+            grpcServerIP = __getServerAddress(dict['name'])
+            app.logger.info("Starting download for %s from %s", dict['name'], grpcServerIP)
+            success = fileserver_client.Client().download(dict['name'], grpcServerIP, fileHandle)
+        fileHandle.close()
         end = time.time()
 
         if not success:
@@ -125,11 +141,18 @@ def __getServerAddress(md5):
     filemd5 = {'md5': md5}
     try:
         raw_response = requests.get(SERVICE_REGISTRY_ENDPOINT, params = filemd5)
-        # app.logger.info("%s",raw_response)
         obj = raw_response.json()
         return obj['msg']
     except Exception as e:
         app.logger.warning("%s",str(e))
+
+def _createDownloadFolder():
+    if not os.path.exists(DOWNLOAD_FOLDER):
+        os.makedirs(DOWNLOAD_FOLDER)
+        app.logger.info("created /downloads folder")
+    else:
+        app.logger.info("/downloads folder exists")
+    app.logger.info(DOWNLOAD_FOLDER)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',debug=True)
