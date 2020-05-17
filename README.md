@@ -11,7 +11,9 @@
 ```
 
 ### Package Installation
+```
 pip install -r requirements.txt
+```
 
 ### Generate GRPC server files
 ```
@@ -27,6 +29,6 @@ pip install -r requirements.txt
    python grpc_server/grpc_server.py 127.0.0.1 2751 
 ```
 ## Reference
-https://ops.tips/blog/sending-files-via-grpc/
-https://grpc.io/docs/tutorials/basic/python/
-https://www.nginx.com/blog/service-discovery-in-a-microservices-architecture/
+- https://ops.tips/blog/sending-files-via-grpc/
+- https://grpc.io/docs/tutorials/basic/python/
+- https://www.nginx.com/blog/service-discovery-in-a-microservices-architecture/
