@@ -2,17 +2,21 @@ from flask import Flask,request,jsonify, make_response,send_file
 import logging,os
 import time
 from uhashring import HashRing 
+import json
 
 # init vars
 app = Flask(__name__)
 file_handler = logging.FileHandler('serviceRegistry.log')
 app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.INFO)
-serverMap = dict()
+# map for host:timestamp ["127.0.0.1:2750":43321]
+serverMap = dict()  
 # create a consistent hash ring of 3 nodes of weight 1
 hr = HashRing(nodes=[])
-INACTIVE_SERVER_TIMEOUT = 30 #5 secs
+INACTIVE_SERVER_TIMEOUT = 30 #30 secs
 
+# map for filename:md5 checksum ["demo.mp3":"84c8b3bab857ecf8405072d4fb12e3d8"]
+fileMap = dict()
 @app.route("/")
 def index():
     return "Test Route!"
@@ -67,5 +71,23 @@ def heartbeat():
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
 
+# API to save the file to md5 mapping
+@app.route("/savefilemap", methods=['POST'])
+def savefilemap():
+    try:
+        filename = request.values.get('filename')
+        chunks = request.values.get('chunks')
+        fileMap[filename] = json.loads(chunks)
+    except Exception as e:
+        return make_response(jsonify({"msg":str(e)})) 
+    return fileMap
+
+# API to get the file to md5 mapping
+@app.route("/getfilemap", methods=['GET'])
+def getfilemap():
+    if fileMap is None:
+        return make_response(jsonify({"msg":"No Mappings"}),400)
+    return fileMap
+    
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001,debug=True)

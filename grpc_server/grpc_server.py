@@ -43,7 +43,7 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
                     output.write(c.chunk)
             output.close()
             return file_server_pb2.UploadStatus(success=True)
-        except Exception, e:
+        except Exception as e:
             logging.warning('Failed to upload to ftp: '+ str(e))
             return file_server_pb2.UploadStatus(success=False)
     
@@ -67,7 +67,7 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
             logging.info('completed GRPC download')
             return self._byteStream(fileHandle)
-        except Exception,e:
+        except Exception as e:
             logging.info('Failed GRPC download : '+ str(e))
             logging.warning('Failed GRPC download : '+ str(e))
             print('Failed GRPC download : '+ str(e))

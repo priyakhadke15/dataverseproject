@@ -1,7 +1,6 @@
 import grpc
 import logging
 import os
-import commands
 import random
 import sys
 
@@ -52,24 +51,8 @@ class Client:
             logging.warning("%s",str(e))
             return False
     
-    # Gets the list of GRPC Servers ports running as
-    def _getAllNodes(self):
-        list_of_ps = os.popen("ps -eaf|grep grpc_server").read().split('\n')
-        output = [i for i in list_of_ps if "python" in i]
-        i=0
-        portList =[]
-        while i<len(output):
-            temp = output[i].split(' ')
-            portList.append(temp[len(temp)-1])
-            logging.info("GRPC servers on port %s",str(temp[len(temp)-1]))
-            i=i+1
-        return portList
-    
     # connect to given GRPC server
     def _connect(self, grpcServerIP):
-        # Move the host selection logic next 2 lines to Consistent Hash algorithm
-        # ports = self._getAllNodes()
-        # portNumber=random.choice(ports)
         logging.info("connecting to grpc server at %s", grpcServerIP)
         channel = grpc.insecure_channel(grpcServerIP)
         stub = file_server_pb2_grpc.FileServiceStub(channel)
