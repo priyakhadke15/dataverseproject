@@ -6,6 +6,7 @@ import time
 import hashlib
 import requests
 import threading
+import json
 
 sys.path.append('../')
 import fileserver_client
@@ -16,7 +17,7 @@ app.logger.setLevel(logging.INFO)
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
-SERVICE_REGISTRY_ENDPOINT = 'http://0.0.0.0:5001/getserver'
+SERVICE_REGISTRY_URL = 'http://0.0.0.0:5001'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
 
 @app.route("/")
@@ -60,7 +61,6 @@ def upload():
                 chunkCtr += 1
                 prevReadPtr = uploadedFile.tell()
 
-            uploadedFile.close()
             end = time.time()
 
             if not success:
@@ -68,6 +68,10 @@ def upload():
                 return make_response(jsonify({"msg":"File not uploaded"}),500)
             uploadtime = end - start
             app.logger.info("Upload successfully in secs %s",str(uploadtime))
+
+            # save file-chunk mapping in registry
+            _saveFilemapInRegistry(uploadedFile.filename, chunks)
+            uploadedFile.close()
             
             # uploadedFile.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(uploadedFile.filename)))
             return make_response(jsonify(
@@ -97,19 +101,20 @@ def download():
         if ext.upper() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return make_response(jsonify({"msg":"invalid file extension"}),400)
         
-        # TODO: this list should come from service registry
-        chunks = [
-            {
-                "chunkNumber": 1,
-                "name": "348f95c89947ac4be76faabdcf660e65",
-                "size": 31457280
-            },
-            {
-                "chunkNumber": 2,
-                "name": "907e39b684bda5bfd0308f281628664c",
-                "size": 20257792
-            }
-        ]
+        # get file-chunk mapping from registry
+        # sample chunks = [
+        #     {
+        #         "chunkNumber": 1,
+        #         "name": "348f95c89947ac4be76faabdcf660e65",
+        #         "size": 31457280
+        #     },
+        #     {
+        #         "chunkNumber": 2,
+        #         "name": "907e39b684bda5bfd0308f281628664c",
+        #         "size": 20257792
+        #     }
+        # ]
+        chunks = _getFilemapFromRegistry(filename)
 
         start = time.time()
         _createDownloadFolder()
@@ -157,10 +162,28 @@ def __downloadChunk(chunkName):
     fileserver_client.Client().download(chunkName, grpcServerIP, fileHandle)
     fileHandle.close()
 
+def _saveFilemapInRegistry(filename, fileMap):
+    data = { "filename": filename, "chunks": json.dumps(fileMap)}
+    try:
+        raw_response = requests.post(SERVICE_REGISTRY_URL + "/savefilemap", data = data)
+        obj = raw_response.json()
+        return obj[filename]
+    except Exception as e:
+        app.logger.warning("%s",str(e))
+
+def _getFilemapFromRegistry(filename):
+    params = { 'filename': filename }
+    try:
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getfilemap", params = params)
+        obj = json.loads(raw_response.text)
+        return obj[filename]
+    except Exception as e:
+        app.logger.warning("%s",str(e))
+
 def __getServerAddress(md5):
     filemd5 = {'md5': md5}
     try:
-        raw_response = requests.get(SERVICE_REGISTRY_ENDPOINT, params = filemd5)
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserver", params = filemd5)
         obj = raw_response.json()
         return obj['msg']
     except Exception as e:
