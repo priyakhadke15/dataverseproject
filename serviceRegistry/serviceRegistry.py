@@ -78,16 +78,18 @@ def savefilemap():
         filename = request.values.get('filename')
         chunks = request.values.get('chunks')
         fileMap[filename] = json.loads(chunks)
+        return make_response(jsonify({filename: fileMap[filename]})) 
     except Exception as e:
-        return make_response(jsonify({"msg":str(e)})) 
-    return fileMap
+        return make_response(jsonify({"msg":str(e)}))
 
 # API to get the file to md5 mapping
 @app.route("/getfilemap", methods=['GET'])
 def getfilemap():
-    if fileMap is None:
-        return make_response(jsonify({"msg":"No Mappings"}),400)
-    return fileMap
+
+    filename = request.args.get('filename')
+    if not filename in fileMap:
+        return make_response(jsonify({"msg":"No Mappings"}),404)
+    return make_response(jsonify({filename: fileMap[filename]})) 
     
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001,debug=True)
