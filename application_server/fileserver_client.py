@@ -17,12 +17,13 @@ class Client:
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
         logging.info("initializing GRPC client")
-        
-    def _byteStream(self,fileHandle):
+
+    def _byteStream(self, fileHandle, readUntil):
         while True:
-            chunk = fileHandle.read(CHUNK_SIZE)
+            readFrom = fileHandle.tell()
+            read_chunk_size = min(abs(readUntil - readFrom), CHUNK_SIZE)
+            chunk = fileHandle.read(read_chunk_size)
             if not chunk:
-                fileHandle.close()
                 break
             yield file_server_pb2.Chunk(chunk=chunk)
 
@@ -34,12 +35,12 @@ class Client:
             logging.info("/downloads folder exists")
         logging.info(DOWNLOAD_FOLDER)  
     
-    def upload(self, uploadedFile, grpcServerIP):
+    def upload(self, uploadedFile, grpcServerIP, readUntil, chunkName):
         logging.info("within GRPC client upload")  
         try:
             stub=self._connect(grpcServerIP)
-            chunks_generator = self._byteStream(uploadedFile)
-            metadata = (('filename', uploadedFile.filename),)
+            chunks_generator = self._byteStream(uploadedFile, readUntil)
+            metadata = (('filename', chunkName),)
             response = stub.Upload(chunks_generator, metadata=metadata)
             return response.success
         except Exception as e:
