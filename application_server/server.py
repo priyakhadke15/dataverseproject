@@ -5,6 +5,7 @@ import sys
 import time
 import hashlib
 import requests
+import threading
 
 sys.path.append('../')
 import fileserver_client
@@ -112,18 +113,30 @@ def download():
 
         start = time.time()
         _createDownloadFolder()
-        fileHandle = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
-        success = False
+        threads = []
         for dict in chunks:
-            grpcServerIP = __getServerAddress(dict['name'])
-            app.logger.info("Starting download for %s from %s", dict['name'], grpcServerIP)
-            success = fileserver_client.Client().download(dict['name'], grpcServerIP, fileHandle)
-        fileHandle.close()
+            threads.append(threading.Thread(target=__downloadChunk, args=(dict['name'],),))
+            threads[-1].start()
+
+        for t in threads:
+            t.join()
+
+        # ok to stop timer here since all chunks have been downloaded parallelly
         end = time.time()
 
-        if not success:
-            app.logger.info("download failed")
-            return make_response(jsonify({"msg":"File not downloaded"}),500)
+        # now merge all chunks, delete individual chunk files after appending
+        mergedFile = open(os.path.join(DOWNLOAD_FOLDER, filename), "wb")
+        for dict in chunks:
+            chunkHandle = open(os.path.join(DOWNLOAD_FOLDER, dict['name']), "rb")
+            while True:
+                chunk = chunkHandle.read(MAX_FILE_SIZE)
+                if not chunk:
+                    chunkHandle.close()
+                    os.remove(os.path.join(DOWNLOAD_FOLDER, dict['name']))
+                    break
+                mergedFile.write(chunk)
+        mergedFile.close()
+
         downloadtime = end - start
         app.logger.info("Downloaded successfully in secs %s",str(downloadtime))
         # return send_file('/Users/abhijeetlimaye/Desktop/test.txt', attachment_filename='python.txt')
@@ -136,6 +149,13 @@ def download():
             )
     except Exception,e:
         return make_response(jsonify({"msg":str(e)}),500)
+
+def __downloadChunk(chunkName):
+    fileHandle = open(os.path.join(DOWNLOAD_FOLDER, chunkName), "wb")
+    grpcServerIP = __getServerAddress(chunkName)
+    app.logger.info("Starting download for %s from %s", chunkName, grpcServerIP)
+    fileserver_client.Client().download(chunkName, grpcServerIP, fileHandle)
+    fileHandle.close()
 
 def __getServerAddress(md5):
     filemd5 = {'md5': md5}
