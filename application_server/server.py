@@ -105,12 +105,14 @@ def download():
         #     {
         #         "chunkNumber": 1,
         #         "name": "348f95c89947ac4be76faabdcf660e65",
-        #         "size": 31457280
+        #         "size": 31457280,
+        #         "url": "127.0.0.1:2750"
         #     },
         #     {
         #         "chunkNumber": 2,
         #         "name": "907e39b684bda5bfd0308f281628664c",
-        #         "size": 20257792
+        #         "size": 20257792,
+        #         "url": "127.0.0.1:2750"
         #     }
         # ]
         chunks = _getFilemapFromRegistry(filename)
@@ -118,8 +120,8 @@ def download():
         start = time.time()
         _createDownloadFolder()
         threads = []
-        for dict in chunks:
-            threads.append(threading.Thread(target=__downloadChunk, args=(dict['name'],),))
+        for obj in chunks:
+            threads.append(threading.Thread(target=__downloadChunk, args=(obj,),))
             threads[-1].start()
 
         for t in threads:
@@ -159,9 +161,10 @@ def __mergeChunkFiles(mergedFilename, chunks):
             mergedFile.write(chunk)
     mergedFile.close()
 
-def __downloadChunk(chunkName):
+def __downloadChunk(obj):
+    chunkName = obj['name']
     fileHandle = open(os.path.join(DOWNLOAD_FOLDER, chunkName), "wb")
-    grpcServerIP = __getStreamingServerAddress(chunkName)
+    grpcServerIP = obj['url']
     app.logger.info("Starting download for %s from %s", chunkName, grpcServerIP)
     fileserver_client.Client().download(chunkName, grpcServerIP, fileHandle)
     app.logger.info("Downloaded chunk %s successfully from %s", chunkName, grpcServerIP)

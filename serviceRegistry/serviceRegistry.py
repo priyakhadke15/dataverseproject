@@ -89,6 +89,25 @@ def getfilemap():
     filename = request.args.get('filename')
     if not filename in fileMap:
         return make_response(jsonify({"msg":"No Mappings"}),404)
+
+    # remove the inactive servers from dictionary
+    delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
+    print("Marked for del",delete)
+        
+    for key in delete: 
+        print("Remove the inactive server ",key)  
+        del serverMap[key]
+        hr.remove_node(key)
+
+    chunksArr = fileMap[filename]
+
+    for key in chunksArr: 
+        md5 = key['name']
+        print("md5 ",md5) 
+        # get the node name for the md5 key
+        key['url'] = hr.get_node(md5)
+        print("target_node ",key['url']) 
+
     return make_response(jsonify({filename: fileMap[filename]})) 
     
 if __name__ == "__main__":
