@@ -1,5 +1,10 @@
 # CMPE 275(Enterprise Application Development)
 
+## System Design
+
+![System Design](https://github.com/priyakhadke15/dataverseproject/blob/master/system_design.png)
+
+
 ## Installation Steps
 
 ### Install python virtual env:
