@@ -13,7 +13,7 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 UPLOAD_FOLDER = '{}/uploads/'.format(PROJECT_HOME)
 CHUNK_SIZE = int(1024 * 1024 * 3.9) # 3.99MB
-serviceRegistry_url = 'http://0.0.0.0:5001'
+serviceRegistry_url = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
 thisnodeAdd = {'ipaddress': sys.argv[1],
                'port': sys.argv[2], 
               }
