@@ -8,12 +8,14 @@ import requests
 import threading
 import json
 from io import BytesIO
+from flask_cors import CORS
 
 sys.path.append('../runtime')
 import fileserver_client
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
