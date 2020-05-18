@@ -148,6 +148,28 @@ def download():
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
 
+#get list of files in service registry
+@app.route("/getfilelist", methods=['GET'])
+def getfilelist():
+    try:
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getfilelist")
+        obj = raw_response.json()
+        return make_response(obj, 200)
+    except Exception as e:
+         return make_response(jsonify({"msg":str(e)}),500)
+
+#get list of servers in service registry
+@app.route("/getserverlist", methods=['GET'])
+def getserverlist():
+    try:
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserverlist")
+        obj = raw_response.json()
+        return make_response(obj, 200)
+    except Exception as e:
+        return make_response(jsonify({"msg":str(e)}),500)
+
+
+
 def __mergeChunkFiles(mergedFilename, chunks):
     mergedFile = open(os.path.join(DOWNLOAD_FOLDER, mergedFilename), "wb")
     for dict in chunks:

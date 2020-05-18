@@ -20,6 +20,7 @@ INACTIVE_SERVER_TIMEOUT = 30 #30 secs
 
 # map for filename:md5 checksum ["demo.mp3":"84c8b3bab857ecf8405072d4fb12e3d8"]
 fileMap = dict()
+
 @app.route("/")
 def index():
     return "Test Route!"
@@ -112,6 +113,14 @@ def getfilemap():
         app.logger.info("target_node %s", key['url'])
 
     return make_response(jsonify({filename: fileMap[filename]}))
+
+@app.route("/getfilelist", methods=['GET'])
+def getfilelist():
+    return make_response(fileMap, 200) 
+
+@app.route("/getserverlist", methods=['GET'])
+def getserverlist():
+    return make_response(serverMap, 200) 
 
 # RAFT ROUTES
 
