@@ -48,23 +48,18 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as output:
                 for c in request:
                     output.write(c.chunk)
-            output.close()
-            
-            
+            output.close()            
 
             try:
                 s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
                       aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+                print(str(s3))
                 s3.upload_file(os.path.join(UPLOAD_FOLDER, filename), bucket_name, filename)
                 print("Upload Successful")
                 return file_server_pb2.UploadStatus(success=True)
-            except FileNotFoundError:
-                print("The file was not found")
-                return file_server_pb2.UploadStatus(success=False)
-            except NoCredentialsError:
-                print("Credentials not available")
-                return file_server_pb2.UploadStatus(success=False)
-        
+            except Exception:
+                print("S3 not available, File uploaded to Uploads only not on S3")
+                return file_server_pb2.UploadStatus(success=True)
         except Exception as e:
             logging.warning('Failed to upload to ftp: '+ str(e))
             return file_server_pb2.UploadStatus(success=False)
