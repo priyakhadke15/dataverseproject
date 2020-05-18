@@ -22,8 +22,8 @@ thisnodeAdd = {'ipaddress': sys.argv[1],
                'port': sys.argv[2], 
               }
 bucket_name ='dataverse-cmpe275'
-AWS_ACCESS_KEY_ID = 'AKIAJOWGHMF53NHUAXTQ'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = ''
+AWS_SECRET_ACCESS_KEY = ''
             
 # FileServiceServicer provides an implementation of the methods of the FileServer service.
 class FileServicer(file_server_pb2_grpc.FileServiceServicer):
