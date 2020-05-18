@@ -5,6 +5,10 @@ import time
 import os,logging,sys
 import requests
 
+import boto3
+from botocore.exceptions import NoCredentialsError,ClientError
+import sys
+
 sys.path.append('../runtime')
 import file_server_pb2
 import file_server_pb2_grpc
@@ -17,6 +21,9 @@ serviceRegistry_url = 'http://0.0.0.0:5001'
 thisnodeAdd = {'ipaddress': sys.argv[1],
                'port': sys.argv[2], 
               }
+bucket_name ='dataverse-cmpe275'
+AWS_ACCESS_KEY_ID = 'id'
+AWS_SECRET_ACCESS_KEY = 'key'
             
 # FileServiceServicer provides an implementation of the methods of the FileServer service.
 class FileServicer(file_server_pb2_grpc.FileServiceServicer):
@@ -41,8 +48,18 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as output:
                 for c in request:
                     output.write(c.chunk)
-            output.close()
-            return file_server_pb2.UploadStatus(success=True)
+            output.close()            
+
+            try:
+                s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+                print(str(s3))
+                s3.upload_file(os.path.join(UPLOAD_FOLDER, filename), bucket_name, filename)
+                print("Upload Successful")
+                return file_server_pb2.UploadStatus(success=True)
+            except Exception:
+                print("S3 not available, File uploaded to Uploads only not on S3")
+                return file_server_pb2.UploadStatus(success=True)
         except Exception as e:
             logging.warning('Failed to upload to ftp: '+ str(e))
             return file_server_pb2.UploadStatus(success=False)
@@ -66,7 +83,26 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             logging.info('Starting GRPC download')
             fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
             logging.info('completed GRPC download')
-            return self._byteStream(fileHandle)
+            ifexist=os.path.isfile(os.path.join(UPLOAD_FOLDER, filename)) 
+            if ifexist:
+                print("File Cached, Fetching file from cache")
+                fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
+                return self._byteStream(fileHandle)
+            elif not ifexist:
+                try:
+                    s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+                    s3.head_object(Bucket=bucket_name, Key=filename)
+                except ClientError as e:
+                    print("Exception "+e)
+                    if e.response['Error']['Code'] == "404":
+                         print(filename+" does not exists on Cache and S3")
+                print("File Not Cached, Fetching file from S3")
+                s3.download_file(bucket_name,filename,os.path.join(UPLOAD_FOLDER,filename))
+                fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
+                print("Fetching from S3 completed")
+                return self._byteStream(fileHandle)
+
+            logging.info('completed GRPC download')
         except Exception as e:
             logging.info('Failed GRPC download : '+ str(e))
             logging.warning('Failed GRPC download : '+ str(e))
