@@ -30,10 +30,10 @@ def getserver():
     try:
         # remove the inactive servers from dictionary
         delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
-        app.logger.info("Marked for del",delete)
+        app.logger.info("Marked for del %s", delete)
         
         for key in delete: 
-            app.logger.info("Remove the inactive server ",key)  
+            app.logger.info("Remove the inactive server %s",key) 
             del serverMap[key]
             hr.remove_node(key)
        
@@ -81,7 +81,7 @@ def savefilemap():
         filename = request.values.get('filename')
         chunks = request.values.get('chunks')
         fileMap[filename] = json.loads(chunks)
-        return make_response(jsonify({filename: fileMap[filename]})) 
+        return make_response(jsonify({filename: fileMap[filename]}))
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}))
 
@@ -95,10 +95,10 @@ def getfilemap():
 
     # remove the inactive servers from dictionary
     delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
-    app.logger.info("Marked for del",delete)
+    app.logger.info("Marked for del %s", delete)
         
     for key in delete: 
-        app.logger.info("Remove the inactive server ",key)  
+        app.logger.info("Remove the inactive server %s", key) 
         del serverMap[key]
         hr.remove_node(key)
 
@@ -106,10 +106,10 @@ def getfilemap():
 
     for key in chunksArr: 
         md5 = key['name']
-        app.logger.info("md5 ",md5) 
+        app.logger.info("md5 %s", md5)
         # get the node name for the md5 key
         key['url'] = hr.get_node(md5)
-        app.logger.info("target_node ",key['url']) 
+        app.logger.info("target_node %s", key['url'])
 
     return make_response(jsonify({filename: fileMap[filename]}))
 
@@ -140,6 +140,16 @@ def raftheartbeat():
         if ackLeaderHeartbeat == True:
             return make_response(jsonify({ "vote": True }), 200)
         return make_response(jsonify({ "vote": False }), 403)
+    except Exception as e:
+        return make_response(jsonify({ "msg": str(e) }), 500)
+
+# API to respond with the current replicated data to a new follower
+@app.route("/raft/getcurrentdata", methods=['GET'])
+def raftsendcurrentdata():
+    try:
+        global raftInstance
+        currentData = raftInstance.getCurrentData()
+        return make_response(jsonify({ "data": currentData }), 200)
     except Exception as e:
         return make_response(jsonify({ "msg": str(e) }), 500)
 
