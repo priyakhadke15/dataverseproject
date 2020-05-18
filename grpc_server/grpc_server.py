@@ -50,10 +50,11 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
                     output.write(c.chunk)
             output.close()
             
-            s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                      aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+            
 
             try:
+                s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
                 s3.upload_file(os.path.join(UPLOAD_FOLDER, filename), bucket_name, filename)
                 print("Upload Successful")
                 return file_server_pb2.UploadStatus(success=True)
