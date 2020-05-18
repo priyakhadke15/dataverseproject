@@ -5,7 +5,7 @@ import time
 import os,logging,sys
 import requests
 
-sys.path.append('../')
+sys.path.append('/Users/Ankit/Desktop/College_Sem_2/275/project/dataverseproject/runtime/')
 import file_server_pb2
 import file_server_pb2_grpc
 
