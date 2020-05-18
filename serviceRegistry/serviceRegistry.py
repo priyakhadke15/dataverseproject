@@ -55,6 +55,7 @@ def register():
         key = ipaddress+":"+portno
         serverMap[key] = round(time.time())
         # add back node2
+        logging.info(ipaddress, portno)
         hr.add_node(key)
         return serverMap
     except Exception as e:
@@ -71,6 +72,7 @@ def heartbeat():
             logging.info("not registered service")
             return make_response(jsonify({"msg":"GRPC server not registered"}),400)
         serverMap[key] = round(time.time())
+        logging.info(ipaddress, portno)
         return serverMap
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
@@ -82,14 +84,15 @@ def savefilemap():
         filename = request.values.get('filename')
         chunks = request.values.get('chunks')
         fileMap[filename] = json.loads(chunks)
-        return make_response(jsonify({filename: fileMap[filename]}))
+        logging.info(filename, chunks)
+        return make_response(jsonify({filename: fileMap[filename]})) 
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}))
 
 # API to get the file to md5 mapping
 @app.route("/getfilemap", methods=['GET'])
 def getfilemap():
-
+    logging.info('Get file map')
     filename = request.args.get('filename')
     if not filename in fileMap:
         return make_response(jsonify({"msg":"No Mappings"}),404)
