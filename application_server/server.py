@@ -20,7 +20,7 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
-SERVICE_REGISTRY_URL = 'http://0.0.0.0:5001'
+SERVICE_REGISTRY_URL = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
 
 @app.route("/")
@@ -223,6 +223,7 @@ def __getStreamingServerAddress(md5):
     try:
         raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserver", params = filemd5)
         obj = raw_response.json()
+        app.logger.warning(obj)
         return obj['msg']
     except Exception as e:
         app.logger.warning("%s",str(e))
