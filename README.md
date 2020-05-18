@@ -1,5 +1,10 @@
 # CMPE 275(Enterprise Application Development)
 
+## System Design
+
+![System Design](https://github.com/priyakhadke15/dataverseproject/blob/master/system_design.png)
+
+
 ## Installation Steps
 
 ### Install python virtual env:
@@ -22,11 +27,14 @@ pip install -r requirements.txt
 ```
 ### Run 
 ```
-1. python serviceRegistry/serviceRegistry.py
-2. python application_server/server.py
-3. In new terminals run multiple GRPC servers using IPaddress and port number in args 
-   python grpc_server/grpc_server.py 127.0.0.1 2750
-   python grpc_server/grpc_server.py 127.0.0.1 2751 
+1. cd project home dir/serviceRegistry
+2. python serviceRegistry.py
+3. cd project home dir/application_server
+4. python server.py
+5. cd project home dir/grpc_server
+6. In new terminals run multiple GRPC servers using IPaddress and port number in args 
+   python grpc_server.py 127.0.0.1 2750
+   python grpc_server.py 127.0.0.1 2751 
 ```
 ## Reference
 - https://ops.tips/blog/sending-files-via-grpc/
