@@ -8,17 +8,19 @@ import requests
 import threading
 import json
 from io import BytesIO
+from flask_cors import CORS
 
 sys.path.append('../runtime')
 import fileserver_client
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
-SERVICE_REGISTRY_URL = 'http://0.0.0.0:5001'
+SERVICE_REGISTRY_URL = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
 
 @app.route("/")
@@ -105,12 +107,14 @@ def download():
         #     {
         #         "chunkNumber": 1,
         #         "name": "348f95c89947ac4be76faabdcf660e65",
-        #         "size": 31457280
+        #         "size": 31457280,
+        #         "url": "127.0.0.1:2750"
         #     },
         #     {
         #         "chunkNumber": 2,
         #         "name": "907e39b684bda5bfd0308f281628664c",
-        #         "size": 20257792
+        #         "size": 20257792,
+        #         "url": "127.0.0.1:2750"
         #     }
         # ]
         chunks = _getFilemapFromRegistry(filename)
@@ -118,8 +122,8 @@ def download():
         start = time.time()
         _createDownloadFolder()
         threads = []
-        for dict in chunks:
-            threads.append(threading.Thread(target=__downloadChunk, args=(dict['name'],),))
+        for obj in chunks:
+            threads.append(threading.Thread(target=__downloadChunk, args=(obj,),))
             threads[-1].start()
 
         for t in threads:
@@ -146,6 +150,28 @@ def download():
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
 
+#get list of files in service registry
+@app.route("/getfilelist", methods=['GET'])
+def getfilelist():
+    try:
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getfilelist")
+        obj = raw_response.json()
+        return make_response(obj, 200)
+    except Exception as e:
+         return make_response(jsonify({"msg":str(e)}),500)
+
+#get list of servers in service registry
+@app.route("/getserverlist", methods=['GET'])
+def getserverlist():
+    try:
+        raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserverlist")
+        obj = raw_response.json()
+        return make_response(obj, 200)
+    except Exception as e:
+        return make_response(jsonify({"msg":str(e)}),500)
+
+
+
 def __mergeChunkFiles(mergedFilename, chunks):
     mergedFile = open(os.path.join(DOWNLOAD_FOLDER, mergedFilename), "wb")
     for dict in chunks:
@@ -159,9 +185,10 @@ def __mergeChunkFiles(mergedFilename, chunks):
             mergedFile.write(chunk)
     mergedFile.close()
 
-def __downloadChunk(chunkName):
+def __downloadChunk(obj):
+    chunkName = obj['name']
     fileHandle = open(os.path.join(DOWNLOAD_FOLDER, chunkName), "wb")
-    grpcServerIP = __getStreamingServerAddress(chunkName)
+    grpcServerIP = obj['url']
     app.logger.info("Starting download for %s from %s", chunkName, grpcServerIP)
     fileserver_client.Client().download(chunkName, grpcServerIP, fileHandle)
     app.logger.info("Downloaded chunk %s successfully from %s", chunkName, grpcServerIP)
@@ -196,6 +223,7 @@ def __getStreamingServerAddress(md5):
     try:
         raw_response = requests.get(SERVICE_REGISTRY_URL + "/getserver", params = filemd5)
         obj = raw_response.json()
+        app.logger.warning(obj)
         return obj['msg']
     except Exception as e:
         app.logger.warning("%s",str(e))

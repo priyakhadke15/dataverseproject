@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<title>Dataverse</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif;}
+body, html {
+  height: 100%;
+  color: black;
+  line-height: 1.8;
+  height: 200px;
+  background-color:#55B4B0; /* For browsers that do not support gradients */
+  background-image: linear-gradient(to right ,#7FCDCD, #98B4D4, #577284); /* Standard syntax (must be last) */
+}
+</style>
+<body>
+
+<!-- Navbar (sit on top) -->
+<div class="w3-top">
+  <div class="w3-bar" id="myNavbar">
+    <a class="w3-bar-item w3-button w3-hover-black w3-hide-medium w3-hide-large w3-right" href="javascript:void(0);" onclick="toggleFunction()" title="Toggle Navigation Menu">
+      <i class="fa fa-bars"></i>
+    </a>
+    <a href="#home" class="w3-bar-item w3-button">HOME</a>
+    <a href="#admin" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> ADMIN</a>
+  </div>
+</div>
+
+<!-- Container (About Section) -->
+<div class="w3-content w3-container w3-padding-64" id="home">
+  <h3 class="w3-center">UPLOAD</h3>
+  <p class="w3-center">Choose the file here:</p>
+  <br/>
+  <form class="w3-center" action = "http://localhost:5000/upload" method = "POST" 
+  enctype = "multipart/form-data">
+  <input type = "file" name = "file" />
+  <input type = "submit"/>
+  </form>
+</div>
+
+<br/><br/>
+<div class="w3-content w3-container w3-padding-64" id="home">
+    <h3 class="w3-center">DOWNLOAD</h3>
+    <p class="w3-center">Enter the file name here:</p>
+    <br/>
+    <form class="w3-center" action = "http://localhost:5000/download" method = "GET" 
+         enctype = "multipart/form-data">
+         <input type = "text" name = "filename" />
+         <input type = "submit"/>
+      </form>
+  </div>
+  <div class="w3-content w3-container w3-padding-64" id="admin">
+      <h3 class="w3-center">Admin here</h3>
+      
+    </div>
+<script>
+
+// Change style of navbar on scroll
+window.onscroll = function() {myFunction()};
+function myFunction() {
+    var navbar = document.getElementById("myNavbar");
+    if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+        navbar.className = "w3-bar" + " w3-card" + " w3-animate-top" + " w3-white";
+    } else {
+        navbar.className = navbar.className.replace(" w3-card w3-animate-top w3-white", "");
+    }
+}
+
+// Used to toggle the menu on small screens when clicking on the menu button
+function toggleFunction() {
+    var x = document.getElementById("navDemo");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else {
+        x.className = x.className.replace(" w3-show", "");
+    }
+}
+</script>
+
+</body>
+</html>

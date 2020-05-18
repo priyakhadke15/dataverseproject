@@ -17,6 +17,7 @@ INACTIVE_SERVER_TIMEOUT = 30 #30 secs
 
 # map for filename:md5 checksum ["demo.mp3":"84c8b3bab857ecf8405072d4fb12e3d8"]
 fileMap = dict()
+
 @app.route("/")
 def index():
     return "Test Route!"
@@ -51,6 +52,7 @@ def register():
         key = ipaddress+":"+portno
         serverMap[key] = round(time.time())
         # add back node2
+        logging.info(ipaddress, portno)
         hr.add_node(key)
         return serverMap
     except Exception as e:
@@ -67,6 +69,7 @@ def heartbeat():
             logging.info("not registered service")
             return make_response(jsonify({"msg":"GRPC server not registered"}),400)
         serverMap[key] = round(time.time())
+        logging.info(ipaddress, portno)
         return serverMap
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
@@ -78,6 +81,7 @@ def savefilemap():
         filename = request.values.get('filename')
         chunks = request.values.get('chunks')
         fileMap[filename] = json.loads(chunks)
+        logging.info(filename, chunks)
         return make_response(jsonify({filename: fileMap[filename]})) 
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}))
@@ -85,11 +89,38 @@ def savefilemap():
 # API to get the file to md5 mapping
 @app.route("/getfilemap", methods=['GET'])
 def getfilemap():
-
+    logging.info('Get file map')
     filename = request.args.get('filename')
     if not filename in fileMap:
         return make_response(jsonify({"msg":"No Mappings"}),404)
+
+    # remove the inactive servers from dictionary
+    delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
+    print("Marked for del",delete)
+        
+    for key in delete: 
+        print("Remove the inactive server ",key)  
+        del serverMap[key]
+        hr.remove_node(key)
+
+    chunksArr = fileMap[filename]
+
+    for key in chunksArr: 
+        md5 = key['name']
+        print("md5 ",md5) 
+        # get the node name for the md5 key
+        key['url'] = hr.get_node(md5)
+        print("target_node ",key['url']) 
+
     return make_response(jsonify({filename: fileMap[filename]})) 
+
+@app.route("/getfilelist", methods=['GET'])
+def getfilelist():
+    return make_response(fileMap, 200) 
+
+@app.route("/getserverlist", methods=['GET'])
+def getserverlist():
+    return make_response(serverMap, 200) 
     
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001,debug=True)
