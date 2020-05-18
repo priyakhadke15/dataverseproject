@@ -40,3 +40,4 @@ pip install -r requirements.txt
 - https://ops.tips/blog/sending-files-via-grpc/
 - https://grpc.io/docs/tutorials/basic/python/
 - https://www.nginx.com/blog/service-discovery-in-a-microservices-architecture/
+- https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-examples.html
