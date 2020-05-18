@@ -22,8 +22,8 @@ thisnodeAdd = {'ipaddress': sys.argv[1],
                'port': sys.argv[2], 
               }
 bucket_name ='dataverse-cmpe275'
-AWS_ACCESS_KEY_ID = 'id'
-AWS_SECRET_ACCESS_KEY = 'key'
+AWS_ACCESS_KEY_ID = ''
+AWS_SECRET_ACCESS_KEY = 'H'
             
 # FileServiceServicer provides an implementation of the methods of the FileServer service.
 class FileServicer(file_server_pb2_grpc.FileServiceServicer):
@@ -54,8 +54,15 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
                 s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
                       aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
                 print(str(s3))
-                s3.upload_file(os.path.join(UPLOAD_FOLDER, filename), bucket_name, filename)
-                print("Upload Successful")
+                print("request")
+                print(request)
+                #for c in metadata:
+                 #   print(c.value)
+                  #  print("printing c")
+                   # s3.upload_file(os.path.join(UPLOAD_FOLDER, c.value), bucket_name, c.value)
+                    #print("Upload Successful")
+                s3.upload_file(os.path.join(UPLOAD_FOLDER,filename), bucket_name, filename)    
+                print("S3 Upload Successful")
                 return file_server_pb2.UploadStatus(success=True)
             except Exception:
                 print("S3 not available, File uploaded to Uploads only not on S3")
@@ -81,8 +88,6 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
             logging.info(request.name)
             print(filename)
             logging.info('Starting GRPC download')
-            fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
-            logging.info('completed GRPC download')
             ifexist=os.path.isfile(os.path.join(UPLOAD_FOLDER, filename)) 
             if ifexist:
                 print("File Cached, Fetching file from cache")
@@ -96,13 +101,14 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
                     print("Exception "+e)
                     if e.response['Error']['Code'] == "404":
                          print(filename+" does not exists on Cache and S3")
+                         return  None
                 print("File Not Cached, Fetching file from S3")
                 s3.download_file(bucket_name,filename,os.path.join(UPLOAD_FOLDER,filename))
                 fileHandle = open(os.path.join(UPLOAD_FOLDER, filename), "rb")
                 print("Fetching from S3 completed")
                 return self._byteStream(fileHandle)
 
-            logging.info('completed GRPC download')
+            logging.info('Completed GRPC download')
         except Exception as e:
             logging.info('Failed GRPC download : '+ str(e))
             logging.warning('Failed GRPC download : '+ str(e))
