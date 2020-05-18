@@ -4,7 +4,7 @@ import os
 import random
 import sys
 
-sys.path.append('/Users/Ankit/Desktop/College_Sem_2/275/project/dataverseproject/runtime/')
+sys.path.append('../')
 import file_server_pb2
 import file_server_pb2_grpc
 
