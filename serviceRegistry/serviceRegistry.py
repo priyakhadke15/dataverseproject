@@ -1,10 +1,13 @@
 from flask import Flask,request,jsonify, make_response,send_file
-import logging,os
+import logging, os, sys
 import time
 from uhashring import HashRing 
 import json
+import raft
+from threading import Timer
 
 # init vars
+raftInstance = None
 app = Flask(__name__)
 file_handler = logging.FileHandler('serviceRegistry.log')
 app.logger.addHandler(file_handler)
@@ -27,10 +30,10 @@ def getserver():
     try:
         # remove the inactive servers from dictionary
         delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
-        print("Marked for del",delete)
+        app.logger.info("Marked for del",delete)
         
         for key in delete: 
-            print("Remove the inactive server ",key)  
+            app.logger.info("Remove the inactive server ",key)  
             del serverMap[key]
             hr.remove_node(key)
        
@@ -92,10 +95,10 @@ def getfilemap():
 
     # remove the inactive servers from dictionary
     delete = [key for key in serverMap if time.time()-serverMap[key] > INACTIVE_SERVER_TIMEOUT] 
-    print("Marked for del",delete)
+    app.logger.info("Marked for del",delete)
         
     for key in delete: 
-        print("Remove the inactive server ",key)  
+        app.logger.info("Remove the inactive server ",key)  
         del serverMap[key]
         hr.remove_node(key)
 
@@ -103,12 +106,53 @@ def getfilemap():
 
     for key in chunksArr: 
         md5 = key['name']
-        print("md5 ",md5) 
+        app.logger.info("md5 ",md5) 
         # get the node name for the md5 key
         key['url'] = hr.get_node(md5)
-        print("target_node ",key['url']) 
+        app.logger.info("target_node ",key['url']) 
 
-    return make_response(jsonify({filename: fileMap[filename]})) 
+    return make_response(jsonify({filename: fileMap[filename]}))
+
+# RAFT ROUTES
+
+# API to respond to vote reqests from other nodes
+@app.route("/raft/requestvote", methods=['GET'])
+def raftrequestvote():
+    try:
+        leaderIP = request.args.get('leaderIP')
+        term = request.args.get('term')
+        global raftInstance
+        giveVote = raftInstance.voteRequested(leaderIP, term)
+        if giveVote == True:
+            return make_response(jsonify({ "vote": True }), 200)
+        return make_response(jsonify({ "vote": False }), 403)
+    except Exception as e:
+        return make_response(jsonify({ "msg": str(e) }), 500)
+
+# API to respond (and ack) to leader heartbeat
+@app.route("/raft/heartbeat", methods=['GET'])
+def raftheartbeat():
+    try:
+        leaderIP = request.args.get('leaderIP')
+        term = request.args.get('term')
+        global raftInstance
+        ackLeaderHeartbeat = raftInstance.ackLeaderHeartbeat(leaderIP, term)
+        if ackLeaderHeartbeat == True:
+            return make_response(jsonify({ "vote": True }), 200)
+        return make_response(jsonify({ "vote": False }), 403)
+    except Exception as e:
+        return make_response(jsonify({ "msg": str(e) }), 500)
+
+def _initRaftCluster():
+    global raftInstance
+    raftInstance = raft.Raft(selfIP, partnerIPList, app.logger)
     
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5001,debug=True)
+    port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5001
+    if len(sys.argv) >= 3:
+        selfIP = sys.argv[2]
+        partnerIPList = sys.argv[3:]
+        _initRaftCluster()
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        app.run(host='0.0.0.0', port=port, debug=True)

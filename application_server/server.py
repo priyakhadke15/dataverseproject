@@ -44,13 +44,13 @@ def upload():
             threads = []
             chunkCtr = 1
             prevReadPtr = 0
-            totalFileSize = 0;
+            totalFileSize = 0
             while True:
                 chunk = uploadedFile.read(MAX_FILE_SIZE)
                 if not chunk:
                     break
                 chunkmd5 = hashlib.md5(chunk).hexdigest()
-                runningMD5.update(chunk);
+                runningMD5.update(chunk)
 
                 threads.append(threading.Thread(target=__uploadChunk, args=(chunk, chunkmd5,),))
                 threads[-1].start()
