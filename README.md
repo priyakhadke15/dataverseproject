@@ -6,6 +6,11 @@
 
 ## Configuration
 
+### Setting Up Amazon S3 bucket
+```
+https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html
+```
+
 ### In grpc_server.py Update these values :
 ```
   1. bucket_name : Name of you Amazon S3 bucket
