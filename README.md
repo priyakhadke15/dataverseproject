@@ -4,6 +4,13 @@
 
 ![System Design](https://github.com/priyakhadke15/dataverseproject/blob/master/system_design.png)
 
+## Team Members
+1. [Priya Khadke](https://github.com/priyakhadke15)
+2. [Harshada Jivane](https://github.com/HarshadaJiv)
+3. [Manasa Hari](https://github.com/harimanasa)
+4. [Ankit Thanekar](http://www.github.com/ankit-thanekar007)
+5. [Shailesh Nayak](https://github.com/shailesh-nyk)
+
 ## Configuration
 
 ### Setting Up Amazon S3 bucket
@@ -51,6 +58,13 @@ pip install -r requirements.txt
    python grpc_server.py 127.0.0.1 2750
    python grpc_server.py 127.0.0.1 2751 
 ```
+### Performance Results
+ ## Upload Request Times 
+![Upload Request Times](https://github.com/priyakhadke15/dataverseproject/blob/master/uploadtimes.png)
+
+ ## Download Request Times 
+![Upload Request Times](https://github.com/priyakhadke15/dataverseproject/blob/master/downloadtimes.png)
+
 ## Reference
 - https://ops.tips/blog/sending-files-via-grpc/
 - https://grpc.io/docs/tutorials/basic/python/
