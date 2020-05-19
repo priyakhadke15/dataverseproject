@@ -16,7 +16,7 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 UPLOAD_FOLDER = '{}/uploads/'.format(PROJECT_HOME)
 CHUNK_SIZE = int(1024 * 1024 * 3.9) # 3.99MB
-serviceRegistry_url = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
+serviceRegistry_url = 'http://127.0.0.1:5001'
 thisnodeAdd = {'ipaddress': sys.argv[1],
                'port': sys.argv[2], 
               }
@@ -53,13 +53,7 @@ class FileServicer(file_server_pb2_grpc.FileServiceServicer):
                 s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
                       aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
                 print(str(s3))
-                print("request")
                 print(request)
-                #for c in metadata:
-                 #   print(c.value)
-                  #  print("printing c")
-                   # s3.upload_file(os.path.join(UPLOAD_FOLDER, c.value), bucket_name, c.value)
-                    #print("Upload Successful")
                 s3.upload_file(os.path.join(UPLOAD_FOLDER,filename), bucket_name, filename)    
                 print("S3 Upload Successful")
                 return file_server_pb2.UploadStatus(success=True)

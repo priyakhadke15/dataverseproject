@@ -21,7 +21,7 @@ PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
 app = Flask(__name__, static_url_path=DOWNLOAD_FOLDER)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
-SERVICE_REGISTRY_URL = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
+SERVICE_REGISTRY_URL = 'http://127.0.0.1:5001'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
 
 @app.route("/")
@@ -32,6 +32,7 @@ def index():
 def upload():
     if request.files['file']:
         try:
+            # input file validation
             uploadedFile = request.files['file']
             if not "." in uploadedFile.filename:
                 app.logger.info("uploaded filename:", uploadedFile.filename)
@@ -47,13 +48,13 @@ def upload():
             threads = []
             chunkCtr = 1
             prevReadPtr = 0
-            totalFileSize = 0;
+            totalFileSize = 0
             while True:
                 chunk = uploadedFile.read(MAX_FILE_SIZE)
                 if not chunk:
                     break
                 chunkmd5 = hashlib.md5(chunk).hexdigest()
-                runningMD5.update(chunk);
+                runningMD5.update(chunk)
 
                 threads.append(threading.Thread(target=__uploadChunk, args=(chunk, chunkmd5,),))
                 threads[-1].start()
