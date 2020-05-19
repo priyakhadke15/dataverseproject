@@ -6,7 +6,7 @@
 
 ## Configuration
 
-### In grpc_server.py Update there values :
+### In grpc_server.py Update these values :
 ```
   1. bucket_name : Name of you Amazon S3 bucket
   2. AWS_ACCESS_KEY_ID : AWS Access Key 
