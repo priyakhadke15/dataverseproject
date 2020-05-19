@@ -4,6 +4,15 @@
 
 ![System Design](https://github.com/priyakhadke15/dataverseproject/blob/master/system_design.png)
 
+## Configuration
+```
+In grpc_server.py Update there values :
+bucket_name : Name of you S3 bucket
+AWS_ACCESS_KEY_ID : AWS Access Key 
+AWS_SECRET_ACCESS_KEY : AWS SECRET ACCESS KEY
+
+https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey
+```
 
 ## Installation Steps
 
