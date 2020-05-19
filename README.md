@@ -11,21 +11,6 @@
 4. [Ankit Thanekar](http://www.github.com/ankit-thanekar007)
 5. [Shailesh Nayak](https://github.com/shailesh-nyk)
 
-## Configuration
-
-### Setting Up Amazon S3 bucket
-```
-https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html
-```
-
-### In grpc_server.py Update these values :
-```
-  1. bucket_name : Name of you Amazon S3 bucket
-  2. AWS_ACCESS_KEY_ID : AWS Access Key 
-  3. AWS_SECRET_ACCESS_KEY : AWS SECRET ACCESS KEY
-
-https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey
-```
 
 ## Installation Steps
 
@@ -58,6 +43,23 @@ pip install -r requirements.txt
    python grpc_server.py 127.0.0.1 2750
    python grpc_server.py 127.0.0.1 2751 
 ```
+
+## Configuration
+
+### Setting Up Amazon S3 bucket
+```
+https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html
+```
+
+### In grpc_server.py Update these values :
+```
+  1. bucket_name : Name of you Amazon S3 bucket
+  2. AWS_ACCESS_KEY_ID : AWS Access Key 
+  3. AWS_SECRET_ACCESS_KEY : AWS SECRET ACCESS KEY
+
+https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey
+```
+
 ### Performance Results
  ## Upload Request Times 
 ![Upload Request Times](https://github.com/priyakhadke15/dataverseproject/blob/master/uploadtimes.png)
