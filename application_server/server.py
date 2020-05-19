@@ -1,4 +1,4 @@
-from flask import Flask,request,jsonify, make_response,send_file
+from flask import Flask,request,jsonify, make_response,send_file, send_from_directory
 from werkzeug.utils import secure_filename
 import logging,os
 import sys
@@ -19,6 +19,7 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
 DOWNLOAD_FOLDER = '{}/downloads/'.format(PROJECT_HOME)
+app = Flask(__name__, static_url_path=DOWNLOAD_FOLDER)
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF","TXT","DOC","DOCX","PDF","MKV","AVI","DIVX","MP4"]
 SERVICE_REGISTRY_URL = 'http://ec2-3-82-108-99.compute-1.amazonaws.com:5001'
 MAX_FILE_SIZE = int(1024 * 1024 * 30) # 30MB
@@ -144,7 +145,7 @@ def download():
             {
                 "msg":"file downloaded successfully",
                 "downloadtime":downloadtime,
-                "url":DOWNLOAD_FOLDER
+                "url": "/static/" + filename
             }
             ),200
             )
@@ -170,6 +171,10 @@ def getserverlist():
         return make_response(obj, 200)
     except Exception as e:
         return make_response(jsonify({"msg":str(e)}),500)
+
+@app.route('/static/<path:path>')
+def send_file(path):
+    return send_from_directory(DOWNLOAD_FOLDER, path)
 
 
 
